@@ -17,10 +17,55 @@ const db = mysql.createConnection({
     database: 'employees'
 });
 
-app.use((req, res) => {
-    res.status(404).end();
-})
-
-app.listen(PORT, ()=> {
-    console.log(`Server is running on PORT: ${PORT}`)
+//GET all Employees and associated table information
+app.get('/employees', (req, res) => {
+    db.query('SELECT * FROM employees', (err, results) => {
+        if(err) {
+            console.log (err);
+            res.status(500).send(err);
+        } else {
+            res.status(200).json(results);
+        }
+    });
 });
+app.get('/api/employees', (req, res) => {
+    const sql = `
+                  SELECT 
+                  employees.id AS 'Employee ID',
+                  employees.first_name AS 'First Name',
+                  employees.last_name AS 'Last Name',
+                  employee_roles.title AS 'Title',
+                  employee_roles.salary AS 'Salary',
+                  departments.department_name AS 'Department',
+                  employees.manager_id AS 'Manager'
+                                
+                  FROM employees
+                  JOIN employee_roles ON employees.role_id = employee_roles.id
+                  JOIN departments ON employee_roles.department_id = departments.id
+    `;
+  
+    db.query(sql, (err, rows) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json({
+        message: 'success',
+        data: rows,
+      });
+    });
+  });
+  
+  // Not Found response for unmatched routes
+  app.use((req, res) => {
+    res.status(404).end();
+  });
+  
+  // Start server after DB connection
+  db.connect((err) => {
+    if (err) throw err;
+    console.log('Database connected.');
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  });
