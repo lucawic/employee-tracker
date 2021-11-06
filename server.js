@@ -1,33 +1,48 @@
-const express = require ('express');
-const mysql = require ('mysql2');
+const express = require('express');
+const mysql = require('mysql2');
 require('dotenv').config();
 
+const password = process.env.MYSQL_PW;
 const PORT = process.env.PORT || 3001;
 
-app = express ();
+app = express();
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+
 //connect to database
 const db = mysql.createConnection({
-    host:'localhost',
-    user:'root',
-    password: 'password',
-    database: 'employees'
+  host: 'localhost',
+  user: 'root',
+  password: 'password',
+  database: 'employeesdb',
 });
 
-//GET all Employees and associated table information
+// Get all Employees and associated table information
 app.get('/employees', (req, res) => {
     db.query('SELECT * FROM employees', (err, results) => {
-        if(err) {
-            console.log (err);
-            res.status(500).send(err);
-        } else {
-            res.status(200).json(results);
-        }
+      if (err) {
+        console.log(err);
+        res.status(500).send(err);
+      } else {
+        res.status(200).json(results);
+      }
     });
-});
+  });
+  //Get a single employee and associated table information
+  app.get('/employees/:id', (req, res) => {
+    const id = req.params.id;
+    db.query('SELECT * FROM employees WHERE id = ?', [id], (err, results) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send(err);
+      } else {
+        res.status(200).send(results);
+      }
+    });
+  });
+  
 app.get('/api/employees', (req, res) => {
     const sql = `
                   SELECT 
